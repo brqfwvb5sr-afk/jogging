@@ -1,6 +1,6 @@
 "use strict";
 
-const SPOTIFY_CLIENT_ID = "DEINE_SPOTIFY_CLIENT_ID_HIER_EINTRAGEN";
+const SPOTIFY_CLIENT_ID = "56c93ec577624c4d9f086f275bb0bf79";
 const REDIRECT_URI = "https://brqfwvb5sr-afk.github.io/jogging/";
 const SPOTIFY_SCOPES = [
   "user-read-private",
