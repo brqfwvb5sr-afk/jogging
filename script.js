@@ -9,14 +9,21 @@ const SPOTIFY_SCOPES = [
   "user-read-currently-playing",
   "user-top-read",
   "user-library-read",
-  "user-read-recently-played"
+  "user-read-recently-played",
+  "playlist-read-private",
+  "playlist-read-collaborative"
 ];
 
 const TOKEN_STORAGE_KEY = "jogging_queue_generator_spotify_token";
 const CODE_VERIFIER_KEY = "jogging_queue_generator_code_verifier";
 const AUTH_STATE_KEY = "jogging_queue_generator_auth_state";
 const RECENT_SONG_STORAGE_KEY = "jogging_queue_generator_recent_songs";
+const TASTE_PROFILE_STORAGE_KEY = "jogging_queue_generator_taste_profile";
 const RECENT_SONG_LIMIT = 60;
+const TASTE_PROFILE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const MAX_PLAYLISTS_TO_SCAN = 10;
+const MAX_TRACKS_PER_PLAYLIST = 50;
+const MIN_PERSONAL_SELECTION_SHARE = 0.6;
 const QUEUE_DELAY_MS = 320;
 const POSITIVE_RUNNING_TITLE_WORDS = [
   "run",
@@ -75,6 +82,86 @@ const RUNNING_SCORE_MIN = {
   strict: { warmup: 35, flow: 50, push: 55, cooldown: 22 },
   relaxed: { warmup: 12, flow: 25, push: 28, cooldown: 8 }
 };
+const REQUIRED_TASTE_SCOPES = [
+  "user-top-read",
+  "user-library-read",
+  "user-read-recently-played",
+  "playlist-read-private",
+  "playlist-read-collaborative"
+];
+const GERMAN_ARTISTS = new Set([
+  "apache 207",
+  "luciano",
+  "raf camora",
+  "bonez mc",
+  "pashanim",
+  "cro",
+  "sido",
+  "kontra k",
+  "marteria",
+  "peter fox",
+  "ski aggu",
+  "makko",
+  "paula hartmann",
+  "mark forster",
+  "wincent weiss",
+  "lea",
+  "kraftklub",
+  "sportfreunde stiller",
+  "wir sind helden",
+  "die arzte",
+  "die aerzte",
+  "die toten hosen",
+  "annenmaykantereit",
+  "seeed",
+  "robin schulz",
+  "felix jaehn",
+  "alle farben",
+  "topic",
+  "glockenbach",
+  "purple disco machine",
+  "ufo361",
+  "rin",
+  "capital bra",
+  "kc rebell",
+  "nena",
+  "clueso"
+]);
+const GERMAN_TITLE_WORDS = [
+  "alles",
+  "ander",
+  "bilder",
+  "chor",
+  "dein",
+  "deutsch",
+  "ding",
+  "erfolg",
+  "friesenjung",
+  "gluck",
+  "junge",
+  "kopf",
+  "liebe",
+  "mietfrei",
+  "nachts",
+  "neu",
+  "sowieso",
+  "tage",
+  "traum",
+  "tust",
+  "ubermorgen",
+  "warnung",
+  "wieso",
+  "zukunft"
+];
+const GERMAN_PLAYLIST_HINTS = [
+  "deutsch",
+  "german",
+  "deutschrap",
+  "rap deutsch",
+  "schweiz",
+  "swiss",
+  "german rap"
+];
 const OPEN_SPOTIFY_MESSAGE =
   "Öffne Spotify auf deinem Handy oder PC und starte kurz einen Song. Danach klicke erneut auf Geräte aktualisieren.";
 
@@ -115,7 +202,19 @@ const warmupSongs = [
   { title: "Get By", artist: "Talib Kweli", phase: "warmup", genre: "rap", estimatedDurationSeconds: 227 },
   { title: "Feel So Good", artist: "Mase", phase: "warmup", genre: "rap", estimatedDurationSeconds: 204 },
   { title: "The Seed (2.0)", artist: "The Roots", phase: "warmup", genre: "rap", estimatedDurationSeconds: 267 },
-  { title: "Day 'n' Nite", artist: "Kid Cudi", phase: "warmup", genre: "rap", estimatedDurationSeconds: 221 }
+  { title: "Day 'n' Nite", artist: "Kid Cudi", phase: "warmup", genre: "rap", estimatedDurationSeconds: 221 },
+  { title: "Chöre", artist: "Mark Forster", phase: "warmup", genre: "pop", estimatedDurationSeconds: 208 },
+  { title: "Sowieso", artist: "Mark Forster", phase: "warmup", genre: "pop", estimatedDurationSeconds: 202 },
+  { title: "Musik sein", artist: "Wincent Weiss", phase: "warmup", genre: "pop", estimatedDurationSeconds: 199 },
+  { title: "Ein Kompliment", artist: "Sportfreunde Stiller", phase: "warmup", genre: "pop", estimatedDurationSeconds: 196 },
+  { title: "Ding", artist: "Seeed", phase: "warmup", genre: "pop", estimatedDurationSeconds: 206 },
+  { title: "Easy", artist: "Cro", phase: "warmup", genre: "rap", estimatedDurationSeconds: 173 },
+  { title: "Traum", artist: "Cro", phase: "warmup", genre: "rap", estimatedDurationSeconds: 195 },
+  { title: "Bilder im Kopf", artist: "Sido", phase: "warmup", genre: "rap", estimatedDurationSeconds: 237 },
+  { title: "Airwaves", artist: "Pashanim", phase: "warmup", genre: "rap", estimatedDurationSeconds: 139 },
+  { title: "Sun Goes Down", artist: "Robin Schulz", phase: "warmup", genre: "edm", estimatedDurationSeconds: 180 },
+  { title: "Supergirl", artist: "Alle Farben", phase: "warmup", genre: "edm", estimatedDurationSeconds: 212 },
+  { title: "Home", artist: "Topic", phase: "warmup", genre: "edm", estimatedDurationSeconds: 206 }
 ];
 
 const flowSongs = [
@@ -148,7 +247,22 @@ const flowSongs = [
   { title: "Black and Yellow", artist: "Wiz Khalifa", phase: "flow", genre: "rap", estimatedDurationSeconds: 218 },
   { title: "Work Out", artist: "J. Cole", phase: "flow", genre: "rap", estimatedDurationSeconds: 234 },
   { title: "Jump Around", artist: "House Of Pain", phase: "flow", genre: "rap", estimatedDurationSeconds: 217 },
-  { title: "Hypnotize", artist: "The Notorious B.I.G.", phase: "flow", genre: "rap", estimatedDurationSeconds: 230 }
+  { title: "Hypnotize", artist: "The Notorious B.I.G.", phase: "flow", genre: "rap", estimatedDurationSeconds: 230 },
+  { title: "Übermorgen", artist: "Mark Forster", phase: "flow", genre: "pop", estimatedDurationSeconds: 163 },
+  { title: "Songs für Liam", artist: "Kraftklub", phase: "flow", genre: "pop", estimatedDurationSeconds: 183 },
+  { title: "Denkmal", artist: "Wir sind Helden", phase: "flow", genre: "pop", estimatedDurationSeconds: 197 },
+  { title: "Tage wie diese", artist: "Die Toten Hosen", phase: "flow", genre: "pop", estimatedDurationSeconds: 268 },
+  { title: "Zukunft Pink", artist: "Peter Fox", phase: "flow", genre: "pop", estimatedDurationSeconds: 230 },
+  { title: "Roller", artist: "Apache 207", phase: "flow", genre: "rap", estimatedDurationSeconds: 158 },
+  { title: "Wieso tust Du dir das an?", artist: "Apache 207", phase: "flow", genre: "rap", estimatedDurationSeconds: 195 },
+  { title: "Primo", artist: "RAF Camora", phase: "flow", genre: "rap", estimatedDurationSeconds: 193 },
+  { title: "Astronaut", artist: "Sido", phase: "flow", genre: "rap", estimatedDurationSeconds: 238 },
+  { title: "Kids (2 Finger an den Kopf)", artist: "Marteria", phase: "flow", genre: "rap", estimatedDurationSeconds: 232 },
+  { title: "Sugar", artist: "Robin Schulz", phase: "flow", genre: "edm", estimatedDurationSeconds: 219 },
+  { title: "Ain't Nobody", artist: "Felix Jaehn", phase: "flow", genre: "edm", estimatedDurationSeconds: 186 },
+  { title: "Bad Ideas", artist: "Alle Farben", phase: "flow", genre: "edm", estimatedDurationSeconds: 174 },
+  { title: "Breaking Me", artist: "Topic", phase: "flow", genre: "edm", estimatedDurationSeconds: 166 },
+  { title: "Hypnotized", artist: "Purple Disco Machine", phase: "flow", genre: "edm", estimatedDurationSeconds: 196 }
 ];
 
 const pushSongs = [
@@ -181,7 +295,24 @@ const pushSongs = [
   { title: "m.A.A.d city", artist: "Kendrick Lamar", phase: "push", genre: "rap", estimatedDurationSeconds: 350 },
   { title: "Ante Up", artist: "M.O.P.", phase: "push", genre: "rap", estimatedDurationSeconds: 236 },
   { title: "No Problem", artist: "Chance the Rapper", phase: "push", genre: "rap", estimatedDurationSeconds: 304 },
-  { title: "Started From the Bottom", artist: "Drake", phase: "push", genre: "rap", estimatedDurationSeconds: 173 }
+  { title: "Started From the Bottom", artist: "Drake", phase: "push", genre: "rap", estimatedDurationSeconds: 173 },
+  { title: "Junge", artist: "Die Ärzte", phase: "push", genre: "pop", estimatedDurationSeconds: 187 },
+  { title: "Westerland", artist: "Die Ärzte", phase: "push", genre: "pop", estimatedDurationSeconds: 220 },
+  { title: "Ein Song reicht", artist: "Kraftklub", phase: "push", genre: "pop", estimatedDurationSeconds: 197 },
+  { title: "Augenbling", artist: "Seeed", phase: "push", genre: "pop", estimatedDurationSeconds: 214 },
+  { title: "200 km/h", artist: "Apache 207", phase: "push", genre: "rap", estimatedDurationSeconds: 164 },
+  { title: "500 PS", artist: "Bonez MC & RAF Camora", phase: "push", genre: "rap", estimatedDurationSeconds: 178 },
+  { title: "Andere Liga", artist: "RAF Camora", phase: "push", genre: "rap", estimatedDurationSeconds: 183 },
+  { title: "Erfolg ist kein Glück", artist: "Kontra K", phase: "push", genre: "rap", estimatedDurationSeconds: 237 },
+  { title: "Warnung", artist: "Kontra K", phase: "push", genre: "rap", estimatedDurationSeconds: 187 },
+  { title: "Party Sahne", artist: "Ski Aggu", phase: "push", genre: "rap", estimatedDurationSeconds: 143 },
+  { title: "Friesenjung", artist: "Ski Aggu", phase: "push", genre: "rap", estimatedDurationSeconds: 146 },
+  { title: "Mietfrei", artist: "Ski Aggu", phase: "push", genre: "rap", estimatedDurationSeconds: 147 },
+  { title: "Schüttel deinen Speck", artist: "Peter Fox", phase: "push", genre: "rap", estimatedDurationSeconds: 242 },
+  { title: "OK", artist: "Robin Schulz", phase: "push", genre: "edm", estimatedDurationSeconds: 190 },
+  { title: "Dirty Dancing", artist: "Glockenbach", phase: "push", genre: "edm", estimatedDurationSeconds: 165 },
+  { title: "Fireworks", artist: "Purple Disco Machine", phase: "push", genre: "edm", estimatedDurationSeconds: 200 },
+  { title: "Dopamine", artist: "Purple Disco Machine", phase: "push", genre: "edm", estimatedDurationSeconds: 217 }
 ];
 
 const cooldownSongs = [
@@ -214,7 +345,15 @@ const cooldownSongs = [
   { title: "Electric Relaxation", artist: "A Tribe Called Quest", phase: "cooldown", genre: "rap", estimatedDurationSeconds: 245 },
   { title: "Ms. Jackson", artist: "OutKast", phase: "cooldown", genre: "rap", estimatedDurationSeconds: 270 },
   { title: "LOVE.", artist: "Kendrick Lamar", phase: "cooldown", genre: "rap", estimatedDurationSeconds: 213 },
-  { title: "Best Day Ever", artist: "Mac Miller", phase: "cooldown", genre: "rap", estimatedDurationSeconds: 167 }
+  { title: "Best Day Ever", artist: "Mac Miller", phase: "cooldown", genre: "rap", estimatedDurationSeconds: 167 },
+  { title: "110", artist: "LEA", phase: "cooldown", genre: "pop", estimatedDurationSeconds: 199 },
+  { title: "Oft gefragt", artist: "AnnenMayKantereit", phase: "cooldown", genre: "pop", estimatedDurationSeconds: 200 },
+  { title: "Leiser", artist: "LEA", phase: "cooldown", genre: "pop", estimatedDurationSeconds: 206 },
+  { title: "Meer", artist: "Luciano", phase: "cooldown", genre: "rap", estimatedDurationSeconds: 177 },
+  { title: "Nachts wach", artist: "Makko", phase: "cooldown", genre: "rap", estimatedDurationSeconds: 169 },
+  { title: "DLIT", artist: "Paula Hartmann", phase: "cooldown", genre: "rap", estimatedDurationSeconds: 178 },
+  { title: "Book of Love", artist: "Felix Jaehn", phase: "cooldown", genre: "edm", estimatedDurationSeconds: 198 },
+  { title: "Brooklyn", artist: "Glockenbach", phase: "cooldown", genre: "edm", estimatedDurationSeconds: 182 }
 ];
 
 const songsByPhase = {
@@ -233,9 +372,14 @@ const elements = {
   profileLine: document.querySelector("#profileLine"),
   durationInput: document.querySelector("#durationInput"),
   genreSelect: document.querySelector("#genreSelect"),
+  languagePreferenceSelect: document.querySelector("#languagePreferenceSelect"),
   useSpotifyTasteCheckbox: document.querySelector("#useSpotifyTasteCheckbox"),
   avoidSlowSongsCheckbox: document.querySelector("#avoidSlowSongsCheckbox"),
   tasteMessage: document.querySelector("#tasteMessage"),
+  loadTasteButton: document.querySelector("#loadTasteButton"),
+  refreshTasteButton: document.querySelector("#refreshTasteButton"),
+  tasteStats: document.querySelector("#tasteStats"),
+  personalizationDebug: document.querySelector("#personalizationDebug"),
   refreshDevicesButton: document.querySelector("#refreshDevicesButton"),
   regenerateButton: document.querySelector("#regenerateButton"),
   deviceSelect: document.querySelector("#deviceSelect"),
@@ -255,7 +399,8 @@ let currentDevices = [];
 let currentPlan = [];
 let isBusy = false;
 let personalTasteProfile = createEmptyTasteProfile();
-let skippedPersonalRunningSongs = 0;
+let skippedPersonalRunningSongKeys = new Set();
+let lastPlanStats = createEmptyPlanStats();
 
 document.addEventListener("DOMContentLoaded", init);
 
@@ -300,8 +445,11 @@ function bindEvents() {
   elements.logoutButton.addEventListener("click", logout);
   elements.durationInput.addEventListener("input", updatePlanPreview);
   elements.genreSelect.addEventListener("change", updatePlanPreview);
+  elements.languagePreferenceSelect.addEventListener("change", updatePlanPreview);
   elements.useSpotifyTasteCheckbox.addEventListener("change", handleTastePreferenceChange);
   elements.avoidSlowSongsCheckbox.addEventListener("change", updatePlanPreview);
+  elements.loadTasteButton.addEventListener("click", () => runSafely(() => refreshPersonalTasteProfile({ forceRefresh: false })));
+  elements.refreshTasteButton.addEventListener("click", () => runSafely(() => refreshPersonalTasteProfile({ forceRefresh: true })));
   elements.regenerateButton.addEventListener("click", regeneratePlan);
   elements.refreshDevicesButton.addEventListener("click", () => runSafely(refreshDevices));
   elements.queueButton.addEventListener("click", () => runSafely(() => loadQueue(false)));
@@ -524,9 +672,20 @@ async function loadSpotifyProfile() {
   setProgress(1, 1, "Spotify Profil erfolgreich geladen.");
 }
 
-async function refreshPersonalTasteProfile() {
+async function refreshPersonalTasteProfile({ forceRefresh = false } = {}) {
   if (!elements.useSpotifyTasteCheckbox.checked || !hasStoredToken()) {
     personalTasteProfile = createEmptyTasteProfile();
+    updatePlanPreview();
+    return;
+  }
+
+  if (forceRefresh) {
+    clearTasteProfileCache();
+  }
+
+  const cachedProfile = !forceRefresh ? loadCachedTasteProfile() : null;
+  if (cachedProfile && !isTasteProfileCacheStale(cachedProfile)) {
+    personalTasteProfile = cachedProfile;
     updatePlanPreview();
     return;
   }
@@ -535,22 +694,44 @@ async function refreshPersonalTasteProfile() {
   elements.tasteMessage.className = "message";
   elements.tasteMessage.textContent = "Spotify-Geschmack wird geladen...";
 
+  const missingScopes = getMissingTasteScopes();
   const [topTracks, likedTracks, recentlyPlayed] = await Promise.all([
     spotifyFetchOptional("https://api.spotify.com/v1/me/top/tracks?limit=30&time_range=medium_term"),
     spotifyFetchOptional("https://api.spotify.com/v1/me/tracks?limit=30"),
     spotifyFetchOptional("https://api.spotify.com/v1/me/player/recently-played?limit=30")
   ]);
+  const playlistResult = await loadPlaylistTasteTracks();
   const rawTracks = [
-    ...extractTasteTracks(topTracks.data?.items || [], "top", 55),
-    ...extractTasteTracks((likedTracks.data?.items || []).map((item) => item.track), "liked", 42),
-    ...extractTasteTracks((recentlyPlayed.data?.items || []).map((item) => item.track), "recent", 28)
+    ...extractTasteTracks(topTracks.data?.items || [], "top", 105),
+    ...extractTasteTracks((likedTracks.data?.items || []).map((item) => item.track), "liked", 90),
+    ...extractTasteTracks((recentlyPlayed.data?.items || []).map((item) => item.track), "recent", 62),
+    ...playlistResult.rawTracks
   ];
+  const stats = {
+    topTracksLoaded: topTracks.data?.items?.length || 0,
+    likedTracksLoaded: likedTracks.data?.items?.length || 0,
+    recentlyPlayedLoaded: recentlyPlayed.data?.items?.length || 0,
+    playlistTracksLoaded: playlistResult.trackCount,
+    playlistsScanned: playlistResult.playlistsScanned,
+    personalTracksAvailable: 0,
+    sourceStatuses: {
+      top: topTracks.status,
+      liked: likedTracks.status,
+      recent: recentlyPlayed.status,
+      playlist: playlistResult.status
+    },
+    missingScopes
+  };
 
   if (!rawTracks.length) {
     personalTasteProfile = createEmptyTasteProfile();
     personalTasteProfile.unavailableReason = [topTracks, likedTracks, recentlyPlayed].some((result) => result.status === 403)
       ? "Spotify-Geschmack ist noch nicht verfügbar. Verbinde dich ggf. neu, damit die zusätzlichen Berechtigungen aktiv werden."
       : "Spotify-Geschmack ist aktuell nicht verfügbar. Lokale Jogging-Songs bleiben aktiv.";
+    personalTasteProfile.stats = stats;
+    if (missingScopes.length || playlistResult.status === 403) {
+      personalTasteProfile.unavailableReason = "Bitte einmal abmelden und neu mit Spotify verbinden, damit die neuen Spotify-Rechte aktiv werden.";
+    }
     updatePlanPreview();
     return;
   }
@@ -564,8 +745,18 @@ async function refreshPersonalTasteProfile() {
     tracks,
     artistScores,
     genreScores,
-    unavailableReason: ""
+    unavailableReason: "",
+    loadedAt: Date.now(),
+    loadedFromCache: false,
+    rightsMessage: missingScopes.length
+      ? "Bitte einmal abmelden und neu mit Spotify verbinden, damit die neuen Spotify-Rechte aktiv werden."
+      : "",
+    stats: {
+      ...stats,
+      personalTracksAvailable: tracks.length
+    }
   };
+  saveTasteProfileCache(personalTasteProfile);
   updatePlanPreview();
 }
 
@@ -597,12 +788,62 @@ async function spotifyFetchOptional(url) {
   }
 }
 
-function extractTasteTracks(tracks, sourceType, baseTasteScore) {
+async function loadPlaylistTasteTracks() {
+  const playlistsResult = await spotifyFetchOptional("https://api.spotify.com/v1/me/playlists?limit=20");
+
+  if (!playlistsResult.ok) {
+    return {
+      rawTracks: [],
+      trackCount: 0,
+      playlistsScanned: 0,
+      status: playlistsResult.status
+    };
+  }
+
+  const playlists = (playlistsResult.data?.items || []).slice(0, MAX_PLAYLISTS_TO_SCAN);
+  const rawTracks = [];
+  let playlistsScanned = 0;
+
+  for (let index = 0; index < playlists.length; index += 1) {
+    const playlist = playlists[index];
+    if (!playlist?.id) {
+      continue;
+    }
+
+    const tracksResult = await spotifyFetchOptional(
+      `https://api.spotify.com/v1/playlists/${playlist.id}/tracks?limit=${MAX_TRACKS_PER_PLAYLIST}`
+    );
+
+    if (!tracksResult.ok) {
+      continue;
+    }
+
+    playlistsScanned += 1;
+    rawTracks.push(
+      ...extractTasteTracks(
+        (tracksResult.data?.items || []).map((item) => item.track),
+        "playlist",
+        Math.max(50, 78 - index * 2),
+        playlist.name
+      )
+    );
+  }
+
+  return {
+    rawTracks,
+    trackCount: rawTracks.length,
+    playlistsScanned,
+    status: playlistsResult.status
+  };
+}
+
+function extractTasteTracks(tracks, sourceType, baseTasteScore, playlistName = "") {
   return tracks
     .filter((track) => track?.name && track?.artists?.length)
     .map((track, index) => ({
       track,
       sourceType,
+      playlistName,
       tasteScore: Math.max(15, Math.round(baseTasteScore - index * 0.6))
     }));
 }
@@ -643,7 +884,11 @@ function buildPersonalTracks(rawTracks, artistGenresById) {
     const key = track.id || `${track.name}::${artist.name}`;
     const existing = tracksByKey.get(key);
     const mergedSourceTypes = new Set(existing?.sourceTypes || []);
+    const mergedPlaylistNames = new Set(existing?.playlistNames || []);
     mergedSourceTypes.add(item.sourceType);
+    if (item.playlistName) {
+      mergedPlaylistNames.add(item.playlistName);
+    }
 
     tracksByKey.set(key, {
       title: track.name,
@@ -651,10 +896,11 @@ function buildPersonalTracks(rawTracks, artistGenresById) {
       artistGenres,
       spotifyGenres: artistGenres,
       sourceTypes: [...mergedSourceTypes],
+      playlistNames: [...mergedPlaylistNames],
       uri: track.uri,
       genre: inferAppGenre(artistGenres),
       estimatedDurationSeconds: Math.round((track.duration_ms || 210000) / 1000),
-      tasteScore: Math.min(100, Math.max(existing?.tasteScore || 0, item.tasteScore) + (existing ? 12 : 0))
+      tasteScore: Math.min(220, Math.max(existing?.tasteScore || 0, item.tasteScore) + (existing ? 28 : 0))
     });
   }
 
@@ -702,14 +948,148 @@ function inferAppGenre(genres) {
   return "mixed";
 }
 
+function isLikelyGermanTrack(track) {
+  const titleText = normalizeText(track.title);
+  const playlistText = (track.playlistNames || []).map(normalizeText).join(" ");
+  const genreText = getGenreText(track);
+
+  return (
+    track.language === "de" ||
+    isLikelyGermanArtist(track.artist) ||
+    GERMAN_TITLE_WORDS.some((word) => containsWord(` ${titleText} `, word)) ||
+    GERMAN_PLAYLIST_HINTS.some((hint) => playlistText.includes(normalizeText(hint))) ||
+    containsAnyPhrase(genreText, ["german", "deutsch", "german hip hop", "german pop", "german rap"])
+  );
+}
+
+function isLikelyGermanArtist(artistName) {
+  const normalizedArtist = normalizeText(artistName);
+  return [...GERMAN_ARTISTS].some(
+    (artist) => normalizedArtist === artist || normalizedArtist.includes(artist) || artist.includes(normalizedArtist)
+  );
+}
+
+function calculateLanguagePreferenceBonus(track, languagePreference) {
+  if (languagePreference === "any") {
+    return 0;
+  }
+
+  const isGermanTrack = isLikelyGermanTrack(track);
+
+  if (languagePreference === "de") {
+    if (isGermanTrack && (track.source === "personal" || track.sourceTypes?.length)) {
+      return 80;
+    }
+    if (isGermanTrack) {
+      return 60;
+    }
+    return -12;
+  }
+
+  if (languagePreference === "en") {
+    return isGermanTrack ? -18 : 25;
+  }
+
+  return 0;
+}
+
 function createEmptyTasteProfile() {
   return {
     loaded: false,
     tracks: [],
     artistScores: new Map(),
     genreScores: new Map(),
-    unavailableReason: ""
+    unavailableReason: "",
+    rightsMessage: "",
+    loadedAt: 0,
+    loadedFromCache: false,
+    stats: createEmptyTasteStats()
   };
+}
+
+function createEmptyTasteStats() {
+  return {
+    topTracksLoaded: 0,
+    likedTracksLoaded: 0,
+    recentlyPlayedLoaded: 0,
+    playlistTracksLoaded: 0,
+    playlistsScanned: 0,
+    personalTracksAvailable: 0,
+    sourceStatuses: {},
+    missingScopes: []
+  };
+}
+
+function saveTasteProfileCache(profile) {
+  try {
+    localStorage.setItem(
+      TASTE_PROFILE_STORAGE_KEY,
+      JSON.stringify({
+        loaded: profile.loaded,
+        tracks: profile.tracks,
+        unavailableReason: profile.unavailableReason,
+        rightsMessage: profile.rightsMessage,
+        loadedAt: profile.loadedAt,
+        stats: profile.stats
+      })
+    );
+  } catch {
+    // The app still works without a taste cache.
+  }
+}
+
+function loadCachedTasteProfile() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(TASTE_PROFILE_STORAGE_KEY));
+    if (!cached?.tracks?.length || !cached.loadedAt) {
+      return null;
+    }
+
+    const { artistScores, genreScores } = buildTasteScoreMaps(cached.tracks);
+    return {
+      loaded: true,
+      tracks: cached.tracks,
+      artistScores,
+      genreScores,
+      unavailableReason: cached.unavailableReason || "",
+      rightsMessage: cached.rightsMessage || "",
+      loadedAt: cached.loadedAt,
+      loadedFromCache: true,
+      stats: cached.stats || createEmptyTasteStats()
+    };
+  } catch {
+    clearTasteProfileCache();
+    return null;
+  }
+}
+
+function clearTasteProfileCache() {
+  localStorage.removeItem(TASTE_PROFILE_STORAGE_KEY);
+}
+
+function isTasteProfileCacheStale(profile) {
+  return !profile.loadedAt || Date.now() - profile.loadedAt > TASTE_PROFILE_MAX_AGE_MS;
+}
+
+function getTasteProfileAgeText(profile = personalTasteProfile) {
+  if (!profile.loadedAt) {
+    return "noch nicht geladen";
+  }
+
+  const ageMinutes = Math.max(0, Math.round((Date.now() - profile.loadedAt) / 60000));
+  if (ageMinutes < 2) {
+    return "gerade eben";
+  }
+  if (ageMinutes < 60) {
+    return `vor ${ageMinutes} Minuten`;
+  }
+
+  return `vor ${Math.round(ageMinutes / 60)} Stunden`;
+}
+
+function getMissingTasteScopes() {
+  const grantedScopes = new Set((getStoredToken()?.scope || "").split(/\s+/).filter(Boolean));
+  return REQUIRED_TASTE_SCOPES.filter((scope) => !grantedScopes.has(scope));
 }
 
 async function refreshDevices() {
@@ -774,6 +1154,7 @@ function renderLoggedOut() {
 
 function logout() {
   clearToken();
+  clearTasteProfileCache();
   currentDevices = [];
   personalTasteProfile = createEmptyTasteProfile();
   elements.profileLine.textContent = "";
@@ -802,20 +1183,80 @@ async function handleTastePreferenceChange() {
   updatePlanPreview();
 }
 
+function createEmptyPlanStats() {
+  return {
+    totalSongs: 0,
+    personalSongs: 0,
+    fallbackSongs: 0,
+    germanSongs: 0,
+    personalCandidatesAfterFilter: 0,
+    personalCandidatesTotal: 0,
+    personalSongsUsed: 0,
+    fallbackWasNeeded: false
+  };
+}
+
+function updatePlanStats(plan) {
+  const songs = plan.flatMap((phase) => phase.songs);
+  const personalSongs = songs.filter((song) => song.source === "personal").length;
+  const germanSongs = songs.filter(isLikelyGermanTrack).length;
+  const personalCandidatesAfterFilter = countJoggingSuitablePersonalCandidates();
+
+  lastPlanStats = {
+    totalSongs: songs.length,
+    personalSongs,
+    fallbackSongs: songs.length - personalSongs,
+    germanSongs,
+    personalCandidatesAfterFilter,
+    personalCandidatesTotal: personalTasteProfile.tracks.length,
+    personalSongsUsed: personalSongs,
+    fallbackWasNeeded:
+      elements.useSpotifyTasteCheckbox.checked &&
+      personalTasteProfile.loaded &&
+      personalCandidatesAfterFilter > 0 &&
+      songs.length > 0 &&
+      personalSongs / songs.length < MIN_PERSONAL_SELECTION_SHARE
+  };
+}
+
+function countJoggingSuitablePersonalCandidates() {
+  if (!personalTasteProfile.loaded) {
+    return 0;
+  }
+
+  const avoidSlowSongs = elements.avoidSlowSongsCheckbox.checked;
+  const languagePreference = elements.languagePreferenceSelect.value;
+  const usableKeys = new Set();
+  const previousSkippedKeys = skippedPersonalRunningSongKeys;
+  skippedPersonalRunningSongKeys = new Set(previousSkippedKeys);
+
+  for (const phase of phaseDefinitions) {
+    for (const candidate of getPersonalSongCandidatesForPhase(phase.key, new Set(), avoidSlowSongs, languagePreference)) {
+      usableKeys.add(getSongKey(candidate));
+    }
+  }
+
+  skippedPersonalRunningSongKeys = previousSkippedKeys;
+  return usableKeys.size;
+}
+
 function buildPlan() {
   const durationMinutes = getDurationMinutes();
   const genre = elements.genreSelect.value;
+  const languagePreference = elements.languagePreferenceSelect.value;
   const useSpotifyTaste = elements.useSpotifyTasteCheckbox.checked && personalTasteProfile.loaded;
   const avoidSlowSongs = elements.avoidSlowSongsCheckbox.checked;
   const usedSongKeys = new Set();
-  skippedPersonalRunningSongs = 0;
+  skippedPersonalRunningSongKeys = new Set();
+  lastPlanStats = createEmptyPlanStats();
 
-  return phaseDefinitions.map((phase) => {
+  const plan = phaseDefinitions.map((phase) => {
     const targetSeconds = Math.round(durationMinutes * 60 * phase.share);
     const songs = selectSongsForPhase(
       phase.key,
       targetSeconds,
       genre,
+      languagePreference,
       usedSongKeys,
       useSpotifyTaste,
       avoidSlowSongs
@@ -833,6 +1274,9 @@ function buildPlan() {
       songs
     };
   });
+
+  updatePlanStats(plan);
+  return plan;
 }
 
 function getDurationMinutes() {
@@ -847,36 +1291,43 @@ function selectSongsForPhase(
   phaseKey,
   targetSeconds,
   selectedGenre,
+  languagePreference,
   usedSongKeys,
   useSpotifyTaste,
   avoidSlowSongs
 ) {
   const localPool = songsByPhase[phaseKey]
     .filter((song) => !usedSongKeys.has(getSongKey(song)))
-    .map((song) => scoreLocalSongCandidate(song, phaseKey));
+    .map((song) => scoreLocalSongCandidate(song, phaseKey, languagePreference));
   const personalPool = useSpotifyTaste
-    ? getPersonalSongCandidatesForPhase(phaseKey, usedSongKeys, avoidSlowSongs)
+    ? getPersonalSongCandidatesForPhase(phaseKey, usedSongKeys, avoidSlowSongs, languagePreference)
     : [];
   const pool = [...personalPool, ...localPool];
   const preferred =
     selectedGenre === "mixed" ? pool : pool.filter((song) => matchesSelectedGenre(song, selectedGenre));
   const fallback =
     selectedGenre === "mixed" ? [] : pool.filter((song) => !matchesSelectedGenre(song, selectedGenre));
-  return selectRandomSongsForTargetDuration(preferred, fallback, targetSeconds);
+  return selectRandomSongsForTargetDuration(preferred, fallback, targetSeconds, useSpotifyTaste);
 }
 
-function selectRandomSongsForTargetDuration(preferredSongs, fallbackSongs, targetSeconds) {
+function selectRandomSongsForTargetDuration(preferredSongs, fallbackSongs, targetSeconds, preferPersonalSongs) {
   const recentSongKeys = getRecentSongKeys();
+  const personalCandidates = [...preferredSongs, ...fallbackSongs].filter((song) => song.source === "personal");
+  const availablePersonalSeconds = sumSeconds(personalCandidates);
+  const personalTargetSeconds = preferPersonalSongs && personalCandidates.length
+    ? Math.min(Math.round(targetSeconds * MIN_PERSONAL_SELECTION_SHARE), availablePersonalSeconds)
+    : 0;
   // Shuffle each priority bucket: selected genre stays first, recent songs are only fallback within that bucket.
   const candidates = [
-    ...weightedShuffleSongs(preferredSongs.filter((song) => !recentSongKeys.has(getSongKey(song)))),
-    ...weightedShuffleSongs(preferredSongs.filter((song) => recentSongKeys.has(getSongKey(song)))),
-    ...weightedShuffleSongs(fallbackSongs.filter((song) => !recentSongKeys.has(getSongKey(song)))),
-    ...weightedShuffleSongs(fallbackSongs.filter((song) => recentSongKeys.has(getSongKey(song))))
+    ...weightedShuffleBySource(preferredSongs.filter((song) => !recentSongKeys.has(getSongKey(song))), preferPersonalSongs),
+    ...weightedShuffleBySource(preferredSongs.filter((song) => recentSongKeys.has(getSongKey(song))), preferPersonalSongs),
+    ...weightedShuffleBySource(fallbackSongs.filter((song) => !recentSongKeys.has(getSongKey(song))), preferPersonalSongs),
+    ...weightedShuffleBySource(fallbackSongs.filter((song) => recentSongKeys.has(getSongKey(song))), preferPersonalSongs)
   ];
   const selected = [];
   const selectedSongKeys = new Set();
   let total = 0;
+  let personalSeconds = 0;
 
   for (const song of candidates) {
     const songKey = getSongKey(song);
@@ -887,15 +1338,23 @@ function selectRandomSongsForTargetDuration(preferredSongs, fallbackSongs, targe
     const currentDifference = Math.abs(targetSeconds - total);
     const nextDifference = Math.abs(targetSeconds - (total + song.estimatedDurationSeconds));
 
-    if (selected.length > 0 && total >= targetSeconds * 0.7 && nextDifference > currentDifference) {
+    if (
+      selected.length > 0 &&
+      total >= targetSeconds * 0.7 &&
+      personalSeconds >= personalTargetSeconds &&
+      nextDifference > currentDifference
+    ) {
       break;
     }
 
     selected.push(song);
     selectedSongKeys.add(songKey);
     total += song.estimatedDurationSeconds;
+    if (song.source === "personal") {
+      personalSeconds += song.estimatedDurationSeconds;
+    }
 
-    if (total >= targetSeconds * 0.98) {
+    if (total >= targetSeconds * 0.98 && personalSeconds >= personalTargetSeconds) {
       break;
     }
   }
@@ -907,21 +1366,21 @@ function selectRandomSongsForTargetDuration(preferredSongs, fallbackSongs, targe
   return selected;
 }
 
-function getPersonalSongCandidatesForPhase(phaseKey, usedSongKeys, avoidSlowSongs) {
+function getPersonalSongCandidatesForPhase(phaseKey, usedSongKeys, avoidSlowSongs, languagePreference) {
   const strictness = avoidSlowSongs ? "strict" : "relaxed";
 
   return personalTasteProfile.tracks
     .filter((track) => !usedSongKeys.has(getSongKey(track)))
-    .map((track) => scorePersonalSongCandidate(track, phaseKey))
+    .map((track) => scorePersonalSongCandidate(track, phaseKey, languagePreference))
     .filter((track) => {
       if (isClearlyBadRunningSong(track, phaseKey, avoidSlowSongs)) {
-        skippedPersonalRunningSongs += 1;
+        skippedPersonalRunningSongKeys.add(getSongKey(track));
         return false;
       }
 
       const minimumFinalScore = PERSONAL_FINAL_SCORE_MIN[strictness][phaseKey];
       if (track.finalScore < minimumFinalScore) {
-        skippedPersonalRunningSongs += 1;
+        skippedPersonalRunningSongKeys.add(getSongKey(track));
         return false;
       }
 
@@ -929,10 +1388,11 @@ function getPersonalSongCandidatesForPhase(phaseKey, usedSongKeys, avoidSlowSong
     });
 }
 
-function scorePersonalSongCandidate(track, phaseKey) {
+function scorePersonalSongCandidate(track, phaseKey, languagePreference) {
   const phasedTrack = { ...track, phase: phaseKey };
   const runningSuitabilityScore = calculateRunningSuitabilityScore(phasedTrack);
-  const tasteScore = Math.min(100, (track.tasteScore || 0) + getArtistTasteBoost(track) + getGenreTasteBoost(track));
+  const tasteScore = Math.min(260, (track.tasteScore || 0) + getArtistTasteBoost(track) + getGenreTasteBoost(track));
+  const languageBonus = calculateLanguagePreferenceBonus(phasedTrack, languagePreference);
 
   return {
     ...phasedTrack,
@@ -940,21 +1400,24 @@ function scorePersonalSongCandidate(track, phaseKey) {
     sourceLabel: "Spotify-Geschmack",
     runningSuitabilityScore,
     tasteScore,
-    finalScore: tasteScore + runningSuitabilityScore
+    languageBonus,
+    finalScore: tasteScore + runningSuitabilityScore + languageBonus
   };
 }
 
-function scoreLocalSongCandidate(song, phaseKey) {
+function scoreLocalSongCandidate(song, phaseKey, languagePreference) {
   const phasedSong = { ...song, phase: phaseKey };
   const runningSuitabilityScore = calculateRunningSuitabilityScore(phasedSong);
   const tasteScore = getArtistTasteBoost(phasedSong) + getGenreTasteBoost(phasedSong);
+  const languageBonus = calculateLanguagePreferenceBonus(phasedSong, languagePreference);
 
   return {
     ...phasedSong,
     source: "local",
     runningSuitabilityScore,
     tasteScore,
-    finalScore: tasteScore + runningSuitabilityScore
+    languageBonus,
+    finalScore: tasteScore + runningSuitabilityScore + languageBonus
   };
 }
 
@@ -977,6 +1440,17 @@ function weightedShuffleSongs(songs) {
     })
     .sort((left, right) => right.rank - left.rank)
     .map((entry) => entry.song);
+}
+
+function weightedShuffleBySource(songs, preferPersonalSongs) {
+  if (!preferPersonalSongs) {
+    return weightedShuffleSongs(songs);
+  }
+
+  return [
+    ...weightedShuffleSongs(songs.filter((song) => song.source === "personal")),
+    ...weightedShuffleSongs(songs.filter((song) => song.source !== "personal"))
+  ];
 }
 
 function shuffleArray(array) {
@@ -1031,6 +1505,9 @@ function calculateRunningSuitabilityRawScore(track) {
     if (track.sourceTypes?.includes("recent")) {
       score += 20;
     }
+    if (track.sourceTypes?.includes("playlist")) {
+      score += 25;
+    }
   }
 
   for (const word of NEGATIVE_RUNNING_TITLE_WORDS) {
@@ -1074,7 +1551,15 @@ function isClearlyBadRunningSong(track, phase, avoidSlowSongs = true) {
   ]);
 
   if (hasHardBadTitle || hasHardBadGenre) {
-    return avoidSlowSongs || phase !== "cooldown" || containsAnyPhrase(titleText, ["sad", "cry", "tears", "lonely", "heartbreak", "sleep"]);
+    const severeSadSignal =
+      containsAnyPhrase(titleText, ["sad", "cry", "tears", "lonely", "heartbreak", "sleep"]) ||
+      containsAnyPhrase(genreText, ["sad", "ballad", "ambient", "sleep", "slowcore"]);
+
+    if (severeSadSignal) {
+      return true;
+    }
+
+    return phase !== "cooldown" && avoidSlowSongs;
   }
 
   return score < RUNNING_SCORE_MIN[strictness][phase];
@@ -1124,7 +1609,10 @@ function containsWord(text, word) {
 }
 
 function normalizeText(value) {
-  return String(value || "").toLowerCase();
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 }
 
 function escapeRegExp(value) {
@@ -1193,6 +1681,7 @@ function renderPlan(plan) {
           ? `${song.artist} - Spotify-Geschmack · Jogging-Score ${song.runningSuitabilityScore}/100`
           : `${song.artist} - ${song.genre.toUpperCase()} - ${formatMinutes(song.estimatedDurationSeconds)}`;
 
+      details.textContent = formatSongDetails(song);
       item.append(songTitle, details);
       list.append(item);
     });
@@ -1202,7 +1691,7 @@ function renderPlan(plan) {
   });
 }
 
-function renderTasteMessage() {
+function renderLegacyTasteMessage() {
   const useSpotifyTaste = elements.useSpotifyTasteCheckbox.checked;
 
   if (!useSpotifyTaste || !hasStoredToken()) {
@@ -1224,10 +1713,144 @@ function renderTasteMessage() {
     return;
   }
 
-  const skippedText = skippedPersonalRunningSongs
-    ? ` ${skippedPersonalRunningSongs} persönliche Songs wurden übersprungen, weil sie zu ruhig oder traurig fürs Joggen wirkten.`
+  const skippedText = skippedPersonalRunningSongKeys.size
+    ? ` ${skippedPersonalRunningSongKeys.size} persönliche Songs wurden übersprungen, weil sie zu ruhig oder traurig fürs Joggen wirkten.`
     : "";
   elements.tasteMessage.textContent = `Spotify-Geschmack aktiv: ${personalTasteProfile.tracks.length} Songs dienen als Inspiration.${skippedText}`;
+}
+
+function renderTasteMessage() {
+  renderTasteStats();
+  renderPersonalizationDebug();
+
+  const useSpotifyTaste = elements.useSpotifyTasteCheckbox.checked;
+
+  elements.tasteMessage.hidden = false;
+  elements.tasteMessage.className = "message";
+
+  if (!hasStoredToken()) {
+    elements.tasteMessage.textContent = "Verbinde Spotify, um dein Taste-Profil aus Top Tracks, gelikten Songs, zuletzt gehörten Songs und Playlists zu laden.";
+    return;
+  }
+
+  if (!useSpotifyTaste) {
+    elements.tasteMessage.textContent = "Spotify-Geschmack ist deaktiviert. Die Vorschau nutzt lokale Jogging-Songs.";
+    return;
+  }
+
+  if (personalTasteProfile.unavailableReason) {
+    elements.tasteMessage.textContent = personalTasteProfile.unavailableReason;
+    return;
+  }
+
+  if (!personalTasteProfile.loaded) {
+    elements.tasteMessage.textContent = "Lokale Jogging-Songs werden verwendet, bis dein Spotify-Geschmack geladen ist.";
+    return;
+  }
+
+  const messages = [
+    `Taste-Profil geladen ${getTasteProfileAgeText()}.`,
+    `${personalTasteProfile.tracks.length} persönliche Songs verfügbar.`,
+    `${lastPlanStats.personalSongsUsed} persönliche Songs in dieser Auswahl.`
+  ];
+
+  if (personalTasteProfile.rightsMessage || getMissingTasteScopes().length) {
+    messages.push("Bitte einmal abmelden und neu mit Spotify verbinden, damit die neuen Spotify-Rechte aktiv werden.");
+  }
+
+  if (isTasteProfileCacheStale(personalTasteProfile)) {
+    messages.push("Der Cache ist älter als 24 Stunden. Klicke auf Spotify-Geschmack aktualisieren.");
+  }
+
+  if (skippedPersonalRunningSongKeys.size) {
+    messages.push(`${skippedPersonalRunningSongKeys.size} persönliche Songs wurden übersprungen, weil sie zu ruhig oder traurig fürs Joggen wirkten.`);
+  }
+
+  if (lastPlanStats.fallbackWasNeeded) {
+    messages.push("Es wurden zu wenige joggentaugliche persönliche Songs gefunden, deshalb wurden Fallback-Songs ergänzt.");
+  }
+
+  elements.tasteMessage.textContent = messages.join(" ");
+}
+
+function renderTasteStats() {
+  const stats = personalTasteProfile.stats || createEmptyTasteStats();
+  renderStatPills(elements.tasteStats, [
+    { label: "Top Tracks geladen", value: stats.topTracksLoaded || 0 },
+    { label: "Gelikte Songs geladen", value: stats.likedTracksLoaded || 0 },
+    { label: "Zuletzt gehört geladen", value: stats.recentlyPlayedLoaded || 0 },
+    { label: "Playlist-Songs geladen", value: stats.playlistTracksLoaded || 0 },
+    { label: "Persönliche Songs verfügbar", value: stats.personalTracksAvailable || personalTasteProfile.tracks.length || 0 },
+    { label: "Davon joggentauglich", value: lastPlanStats.personalCandidatesAfterFilter || 0 },
+    { label: "Für diese Auswahl verwendet", value: lastPlanStats.personalSongsUsed || 0 },
+    { label: "Cache", value: getTasteProfileAgeText() }
+  ]);
+}
+
+function renderPersonalizationDebug() {
+  const total = lastPlanStats.totalSongs || 0;
+  renderStatPills(elements.personalizationDebug, [
+    { label: "Spotify-Geschmack", value: elements.useSpotifyTasteCheckbox.checked ? "aktiv" : "inaktiv" },
+    { label: "Taste-Profil geladen", value: personalTasteProfile.loaded ? "ja" : "nein" },
+    { label: "Persönliche Tracks geladen", value: personalTasteProfile.tracks.length },
+    { label: "Nach Jogging-Filter übrig", value: lastPlanStats.personalCandidatesAfterFilter || 0 },
+    { label: "Persönliche Songs", value: `${lastPlanStats.personalSongs}/${total}` },
+    { label: "Deutsche Songs", value: `${lastPlanStats.germanSongs}/${total}` },
+    { label: "Fallback-Songs", value: `${lastPlanStats.fallbackSongs}/${total}` },
+    { label: "Playlists gescannt", value: personalTasteProfile.stats?.playlistsScanned || 0 }
+  ]);
+}
+
+function renderStatPills(container, stats) {
+  container.innerHTML = "";
+  for (const stat of stats) {
+    const item = document.createElement("div");
+    item.className = "stat-pill";
+    const value = document.createElement("strong");
+    value.textContent = String(stat.value);
+    const label = document.createElement("span");
+    label.textContent = stat.label;
+    item.append(value, label);
+    container.append(item);
+  }
+}
+
+function formatSongDetails(song) {
+  const parts = [song.artist];
+
+  if (song.source === "personal") {
+    parts.push("Spotify-Geschmack");
+    parts.push(formatSourceTypes(song.sourceTypes));
+  } else {
+    parts.push("Lokaler Fallback");
+    parts.push(song.genre.toUpperCase());
+  }
+
+  parts.push(`Jogging ${song.runningSuitabilityScore ?? calculateRunningSuitabilityScore(song)}`);
+  parts.push(`Taste ${Math.round(song.tasteScore || 0)}`);
+
+  if (song.languageBonus) {
+    parts.push(song.languageBonus > 0 ? `Deutsch +${song.languageBonus}` : `Sprache ${song.languageBonus}`);
+  }
+
+  return parts.filter(Boolean).join(" · ");
+}
+
+function formatSourceTypes(sourceTypes = []) {
+  const labels = [];
+  if (sourceTypes.includes("top")) {
+    labels.push("Spotify Top Track");
+  }
+  if (sourceTypes.includes("liked")) {
+    labels.push("Gelikt");
+  }
+  if (sourceTypes.includes("recent")) {
+    labels.push("Zuletzt gehört");
+  }
+  if (sourceTypes.includes("playlist")) {
+    labels.push("Playlist");
+  }
+  return labels.join(" · ");
 }
 
 async function loadQueue(startNow) {
@@ -1352,8 +1975,11 @@ function setBusy(nextBusy) {
     elements.startButton,
     elements.durationInput,
     elements.genreSelect,
+    elements.languagePreferenceSelect,
     elements.useSpotifyTasteCheckbox,
     elements.avoidSlowSongsCheckbox,
+    elements.loadTasteButton,
+    elements.refreshTasteButton,
     elements.deviceSelect
   ].forEach((element) => {
     element.disabled = nextBusy || (element === elements.deviceSelect && !currentDevices.length);

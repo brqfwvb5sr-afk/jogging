@@ -326,6 +326,59 @@ h3 {
   flex-wrap: wrap;
 }
 
+.taste-panel {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0b110d;
+  padding: 16px;
+}
+
+.taste-heading,
+.taste-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.taste-actions {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.taste-stats,
+.debug-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stat-pill {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 9px 10px;
+}
+
+.stat-pill strong,
+.stat-pill span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.stat-pill strong {
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.stat-pill span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
 .phase-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -441,13 +494,17 @@ h3 {
   .device-tools,
   .action-row,
   .section-heading,
-  .progress-copy {
+  .progress-copy,
+  .taste-heading,
+  .taste-actions {
     align-items: stretch;
     flex-direction: column;
   }
 
   .controls-grid,
-  .phase-grid {
+  .phase-grid,
+  .taste-stats,
+  .debug-grid {
     grid-template-columns: 1fr;
   }
 

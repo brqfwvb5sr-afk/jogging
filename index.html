@@ -72,6 +72,15 @@
             </select>
           </label>
 
+          <label class="field">
+            <span>Sprache / Musikraum</span>
+            <select id="languagePreferenceSelect">
+              <option value="any">Egal</option>
+              <option value="de">Deutsch bevorzugen</option>
+              <option value="en">Englisch bevorzugen</option>
+            </select>
+          </label>
+
           <label class="field checkbox-field spotify-only">
             <input id="useSpotifyTasteCheckbox" type="checkbox" checked>
             <span>Spotify-Geschmack verwenden</span>
@@ -83,7 +92,25 @@
           </label>
         </div>
 
-        <div id="tasteMessage" class="message" role="status"></div>
+        <section class="taste-panel" aria-label="Personalisierung">
+          <div class="taste-heading">
+            <div>
+              <p class="eyebrow">Personalisierung</p>
+              <h2>Spotify-Geschmack</h2>
+            </div>
+            <div class="taste-actions">
+              <button id="loadTasteButton" class="button button-secondary" type="button">
+                Spotify-Geschmack laden
+              </button>
+              <button id="refreshTasteButton" class="button button-ghost" type="button">
+                Spotify-Geschmack aktualisieren
+              </button>
+            </div>
+          </div>
+          <div id="tasteMessage" class="message" role="status"></div>
+          <div id="tasteStats" class="taste-stats"></div>
+          <div id="personalizationDebug" class="debug-grid"></div>
+        </section>
 
         <div class="device-tools spotify-only">
           <button id="refreshDevicesButton" class="button button-secondary" type="button">

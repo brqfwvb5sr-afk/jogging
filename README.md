@@ -18,8 +18,10 @@ https://brqfwvb5sr-afk.github.io/jogging/
 - Songauswahl nach Dauer, Phase und Genre
 - Zufällige Songauswahl innerhalb jeder Phase
 - Button **Neue Auswahl generieren** zum lokalen Neu-Würfeln der Vorschau
-- Spotify-Geschmack als Inspiration über Top Tracks, gespeicherte Songs und zuletzt gehörte Songs
+- Spotify-Geschmack als Inspiration über Top Tracks, gespeicherte Songs, zuletzt gehörte Songs und Playlists
 - Jogging-Fitness-Filter gegen langsame, traurige oder sehr chillige Songs
+- Spracheinstellung mit **Deutsch bevorzugen** und deutschen Jogging-Fallbacks
+- Kompakte Diagnose, wie viele persönliche und deutsche Songs wirklich verwendet werden
 - Spotify Search API zum Auflösen der Track-URIs
 - Queue-Modus: alle Tracks nacheinander in die Warteschlange laden
 - Start-Modus: ersten Track starten, restliche Tracks nacheinander laden
@@ -71,13 +73,15 @@ user-read-currently-playing
 user-top-read
 user-library-read
 user-read-recently-played
+playlist-read-private
+playlist-read-collaborative
 ```
 
 `user-read-currently-playing` ist optional, aber bereits eingetragen. Die
 zusätzlichen Taste-Scopes werden für Top Tracks, gespeicherte Songs und zuletzt
-gehörte Songs genutzt. Wenn du schon vor dieser Erweiterung angemeldet warst,
-trenne die Verbindung einmal und melde dich neu an, damit Spotify diese
-Berechtigungen bestätigt.
+gehörte Songs sowie private und kollaborative Playlists genutzt. Nach diesem
+Update musst du dich einmal abmelden und neu verbinden, damit Spotify die neuen
+Playlist-Rechte bestätigt.
 
 ## 4. GitHub Pages aktivieren
 
@@ -103,10 +107,12 @@ https://brqfwvb5sr-afk.github.io/jogging/
 5. Starte kurz einen Song, damit Spotify ein aktives Geraet meldet.
 6. Klicke in der App auf **Geraete aktualisieren**.
 7. Waehle Dauer und Musikstil.
-8. Pruefe die Song-Vorschau.
-9. Klicke optional auf **Neue Auswahl generieren**, um eine andere lokale Auswahl zu würfeln.
-10. Lasse **Langsame/traurige Songs beim Joggen vermeiden** aktiviert, wenn persönliche ruhige Lieblingssongs nicht in die Lauf-Queue sollen.
-11. Nutze **In Warteschlange laden** oder **Jetzt starten**.
+8. Wähle bei **Sprache / Musikraum** optional **Deutsch bevorzugen**, wenn deutsche Songs stärker gewichtet werden sollen.
+9. Klicke auf **Spotify-Geschmack laden** oder **Spotify-Geschmack aktualisieren**.
+10. Pruefe die Song-Vorschau und den Bereich **Personalisierung**.
+11. Klicke optional auf **Neue Auswahl generieren**, um eine andere lokale Auswahl zu würfeln.
+12. Lasse **Langsame/traurige Songs beim Joggen vermeiden** aktiviert, wenn persönliche ruhige Lieblingssongs nicht in die Lauf-Queue sollen.
+13. Nutze **In Warteschlange laden** oder **Jetzt starten**.
 
 Wenn kein Gerät gefunden wird, öffne Spotify auf deinem Handy oder PC und
 starte kurz einen Song. Danach klicke erneut auf **Geräte aktualisieren**.
@@ -124,10 +130,20 @@ starte kurz einen Song. Danach klicke erneut auf **Geräte aktualisieren**.
 - Spotify-Geschmack wird nur als Inspiration verwendet. Persönliche Songs mit
   stark langsamen, traurigen, akustischen oder chilligen Hinweisen werden
   standardmäßig abgewertet oder übersprungen.
+- Die App verwendet Top Tracks, gelikte Songs, zuletzt gehörte Songs und bis zu
+  10 Playlists mit je bis zu 50 Tracks. Playlist-Requests werden kontrolliert
+  nacheinander geladen.
+- Das Taste-Profil wird im Browser-LocalStorage gecacht. Mit
+  **Spotify-Geschmack aktualisieren** wird der Cache gelöscht und neu geladen.
+  Die App zeigt an, wie alt der Cache ist.
 - Die App kann nicht perfekt erkennen, ob ein Song traurig oder langsam ist. Sie
   nutzt einfache Regeln über Titel, Artist-Genres und Quelle.
 - Die Option **Langsame/traurige Songs beim Joggen vermeiden** kann deaktiviert
   werden, wenn du bewusst mehr ruhige persönliche Songs zulassen möchtest.
+- Im Bereich **Personalisierung** siehst du, ob Spotify-Geschmack aktiv ist,
+  wie viele persönliche Songs geladen wurden, wie viele nach dem Jogging-Filter
+  übrig sind und wie viele persönliche, deutsche und Fallback-Songs in der
+  aktuellen Vorschau verwendet werden.
 
 ## 7. Technischer Aufbau
 
