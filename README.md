@@ -16,6 +16,8 @@ https://brqfwvb5sr-afk.github.io/jogging/
 - Spotify Profilabruf zur Login-Prüfung
 - Abruf und Auswahl verfügbarer Spotify-Geräte
 - Songauswahl nach Dauer, Phase und Genre
+- Zufällige Songauswahl innerhalb jeder Phase
+- Button **Neue Auswahl generieren** zum lokalen Neu-Würfeln der Vorschau
 - Spotify Search API zum Auflösen der Track-URIs
 - Queue-Modus: alle Tracks nacheinander in die Warteschlange laden
 - Start-Modus: ersten Track starten, restliche Tracks nacheinander laden
@@ -93,7 +95,8 @@ https://brqfwvb5sr-afk.github.io/jogging/
 6. Klicke in der App auf **Geraete aktualisieren**.
 7. Waehle Dauer und Musikstil.
 8. Pruefe die Song-Vorschau.
-9. Nutze **In Warteschlange laden** oder **Jetzt starten**.
+9. Klicke optional auf **Neue Auswahl generieren**, um eine andere lokale Auswahl zu würfeln.
+10. Nutze **In Warteschlange laden** oder **Jetzt starten**.
 
 Wenn kein Gerät gefunden wird, öffne Spotify auf deinem Handy oder PC und
 starte kurz einen Song. Danach klicke erneut auf **Geräte aktualisieren**.
@@ -106,6 +109,8 @@ starte kurz einen Song. Danach klicke erneut auf **Geräte aktualisieren**.
   geleert werden. Vorhandene Songs können also noch in der Queue liegen.
 - Die App lädt Queue-Requests absichtlich nacheinander mit einer kurzen Pause,
   damit Spotify nicht mit parallelen Requests belastet wird.
+- Spotify kann einzelne Songs trotz bekannter Titel gelegentlich nicht finden.
+  Solche Songs werden übersprungen.
 
 ## 7. Technischer Aufbau
 

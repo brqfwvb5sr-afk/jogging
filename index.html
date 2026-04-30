@@ -43,7 +43,7 @@
       </section>
 
       <section id="appPanel" class="panel app-panel" hidden>
-        <div class="connection-row">
+        <div class="connection-row spotify-only">
           <div class="connection-state">
             <span class="status-dot" aria-hidden="true"></span>
             <div>
@@ -73,7 +73,7 @@
           </label>
         </div>
 
-        <div class="device-tools">
+        <div class="device-tools spotify-only">
           <button id="refreshDevicesButton" class="button button-secondary" type="button">
             Geräte aktualisieren
           </button>
@@ -85,7 +85,7 @@
           </label>
         </div>
 
-        <div id="deviceMessage" class="message" role="status"></div>
+        <div id="deviceMessage" class="message spotify-only" role="status"></div>
 
         <section class="plan-section" aria-labelledby="planTitle">
           <div class="section-heading">
@@ -93,12 +93,17 @@
               <p class="eyebrow">Vorschau</p>
               <h2 id="planTitle">Ausgewaehlte Songs</h2>
             </div>
-            <span id="planSummary" class="summary-pill"></span>
+            <div class="plan-actions">
+              <button id="regenerateButton" class="button button-secondary" type="button">
+                Neue Auswahl generieren
+              </button>
+              <span id="planSummary" class="summary-pill"></span>
+            </div>
           </div>
           <div id="phaseCards" class="phase-grid"></div>
         </section>
 
-        <div class="action-row">
+        <div class="action-row spotify-only">
           <button id="queueButton" class="button button-primary" type="button">
             In Warteschlange laden
           </button>
@@ -107,7 +112,7 @@
           </button>
         </div>
 
-        <section class="activity-panel" aria-label="Ladefortschritt">
+        <section class="activity-panel spotify-only" aria-label="Ladefortschritt">
           <div class="progress-copy">
             <strong id="progressTitle">Bereit</strong>
             <span id="progressText">Noch keine Aktion gestartet.</span>

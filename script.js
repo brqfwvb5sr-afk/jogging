@@ -12,6 +12,8 @@ const SPOTIFY_SCOPES = [
 const TOKEN_STORAGE_KEY = "jogging_queue_generator_spotify_token";
 const CODE_VERIFIER_KEY = "jogging_queue_generator_code_verifier";
 const AUTH_STATE_KEY = "jogging_queue_generator_auth_state";
+const RECENT_SONG_STORAGE_KEY = "jogging_queue_generator_recent_songs";
+const RECENT_SONG_LIMIT = 60;
 const QUEUE_DELAY_MS = 320;
 const OPEN_SPOTIFY_MESSAGE =
   "Öffne Spotify auf deinem Handy oder PC und starte kurz einen Song. Danach klicke erneut auf Geräte aktualisieren.";
@@ -28,14 +30,32 @@ const warmupSongs = [
   { title: "Levitating", artist: "Dua Lipa", phase: "warmup", genre: "pop", estimatedDurationSeconds: 203 },
   { title: "Watermelon Sugar", artist: "Harry Styles", phase: "warmup", genre: "pop", estimatedDurationSeconds: 174 },
   { title: "Flowers", artist: "Miley Cyrus", phase: "warmup", genre: "pop", estimatedDurationSeconds: 200 },
+  { title: "Good as Hell", artist: "Lizzo", phase: "warmup", genre: "pop", estimatedDurationSeconds: 159 },
+  { title: "Treasure", artist: "Bruno Mars", phase: "warmup", genre: "pop", estimatedDurationSeconds: 178 },
+  { title: "Cake By The Ocean", artist: "DNCE", phase: "warmup", genre: "pop", estimatedDurationSeconds: 218 },
+  { title: "Walking On Sunshine", artist: "Katrina & The Waves", phase: "warmup", genre: "pop", estimatedDurationSeconds: 239 },
+  { title: "Good Time", artist: "Owl City", phase: "warmup", genre: "pop", estimatedDurationSeconds: 205 },
+  { title: "Shake It Off", artist: "Taylor Swift", phase: "warmup", genre: "pop", estimatedDurationSeconds: 219 },
   { title: "Rather Be", artist: "Clean Bandit", phase: "warmup", genre: "edm", estimatedDurationSeconds: 227 },
   { title: "Wake Me Up", artist: "Avicii", phase: "warmup", genre: "edm", estimatedDurationSeconds: 247 },
   { title: "This Girl", artist: "Kungs", phase: "warmup", genre: "edm", estimatedDurationSeconds: 195 },
   { title: "Firestone", artist: "Kygo", phase: "warmup", genre: "edm", estimatedDurationSeconds: 273 },
+  { title: "Something Just Like This", artist: "The Chainsmokers", phase: "warmup", genre: "edm", estimatedDurationSeconds: 247 },
+  { title: "Sun Is Shining", artist: "Axwell /\\ Ingrosso", phase: "warmup", genre: "edm", estimatedDurationSeconds: 254 },
+  { title: "Summer", artist: "Calvin Harris", phase: "warmup", genre: "edm", estimatedDurationSeconds: 223 },
+  { title: "I Took A Pill In Ibiza - Seeb Remix", artist: "Mike Posner", phase: "warmup", genre: "edm", estimatedDurationSeconds: 198 },
+  { title: "Fast Car", artist: "Jonas Blue", phase: "warmup", genre: "edm", estimatedDurationSeconds: 212 },
+  { title: "Prayer in C - Robin Schulz Radio Edit", artist: "Lilly Wood and The Prick", phase: "warmup", genre: "edm", estimatedDurationSeconds: 189 },
   { title: "Good Life", artist: "Kanye West", phase: "warmup", genre: "rap", estimatedDurationSeconds: 207 },
   { title: "The Spins", artist: "Mac Miller", phase: "warmup", genre: "rap", estimatedDurationSeconds: 195 },
   { title: "Sunflower", artist: "Post Malone", phase: "warmup", genre: "rap", estimatedDurationSeconds: 158 },
-  { title: "Can I Kick It?", artist: "A Tribe Called Quest", phase: "warmup", genre: "rap", estimatedDurationSeconds: 252 }
+  { title: "Can I Kick It?", artist: "A Tribe Called Quest", phase: "warmup", genre: "rap", estimatedDurationSeconds: 252 },
+  { title: "Rapper's Delight", artist: "The Sugarhill Gang", phase: "warmup", genre: "rap", estimatedDurationSeconds: 234 },
+  { title: "The Choice Is Yours", artist: "Black Sheep", phase: "warmup", genre: "rap", estimatedDurationSeconds: 204 },
+  { title: "Get By", artist: "Talib Kweli", phase: "warmup", genre: "rap", estimatedDurationSeconds: 227 },
+  { title: "Feel So Good", artist: "Mase", phase: "warmup", genre: "rap", estimatedDurationSeconds: 204 },
+  { title: "The Seed (2.0)", artist: "The Roots", phase: "warmup", genre: "rap", estimatedDurationSeconds: 267 },
+  { title: "Day 'n' Nite", artist: "Kid Cudi", phase: "warmup", genre: "rap", estimatedDurationSeconds: 221 }
 ];
 
 const flowSongs = [
@@ -43,14 +63,32 @@ const flowSongs = [
   { title: "Shut Up and Dance", artist: "WALK THE MOON", phase: "flow", genre: "pop", estimatedDurationSeconds: 199 },
   { title: "Dynamite", artist: "BTS", phase: "flow", genre: "pop", estimatedDurationSeconds: 199 },
   { title: "As It Was", artist: "Harry Styles", phase: "flow", genre: "pop", estimatedDurationSeconds: 167 },
+  { title: "Locked Out of Heaven", artist: "Bruno Mars", phase: "flow", genre: "pop", estimatedDurationSeconds: 233 },
+  { title: "Raise Your Glass", artist: "P!nk", phase: "flow", genre: "pop", estimatedDurationSeconds: 203 },
+  { title: "Since U Been Gone", artist: "Kelly Clarkson", phase: "flow", genre: "pop", estimatedDurationSeconds: 188 },
+  { title: "Runaway Baby", artist: "Bruno Mars", phase: "flow", genre: "pop", estimatedDurationSeconds: 148 },
+  { title: "Moves Like Jagger", artist: "Maroon 5", phase: "flow", genre: "pop", estimatedDurationSeconds: 201 },
+  { title: "Teenage Dream", artist: "Katy Perry", phase: "flow", genre: "pop", estimatedDurationSeconds: 228 },
   { title: "Titanium", artist: "David Guetta", phase: "flow", genre: "edm", estimatedDurationSeconds: 245 },
   { title: "The Nights", artist: "Avicii", phase: "flow", genre: "edm", estimatedDurationSeconds: 176 },
   { title: "Lean On", artist: "Major Lazer", phase: "flow", genre: "edm", estimatedDurationSeconds: 176 },
   { title: "Where Are U Now", artist: "Skrillex", phase: "flow", genre: "edm", estimatedDurationSeconds: 250 },
+  { title: "Don't You Worry Child", artist: "Swedish House Mafia", phase: "flow", genre: "edm", estimatedDurationSeconds: 212 },
+  { title: "Clarity", artist: "Zedd", phase: "flow", genre: "edm", estimatedDurationSeconds: 271 },
+  { title: "Sweet Nothing", artist: "Calvin Harris", phase: "flow", genre: "edm", estimatedDurationSeconds: 213 },
+  { title: "I Could Be The One", artist: "Avicii", phase: "flow", genre: "edm", estimatedDurationSeconds: 208 },
+  { title: "On My Way", artist: "Alan Walker", phase: "flow", genre: "edm", estimatedDurationSeconds: 193 },
+  { title: "Heroes (we could be)", artist: "Alesso", phase: "flow", genre: "edm", estimatedDurationSeconds: 210 },
   { title: "HUMBLE.", artist: "Kendrick Lamar", phase: "flow", genre: "rap", estimatedDurationSeconds: 177 },
   { title: "Power", artist: "Kanye West", phase: "flow", genre: "rap", estimatedDurationSeconds: 292 },
   { title: "Lose Yourself", artist: "Eminem", phase: "flow", genre: "rap", estimatedDurationSeconds: 326 },
-  { title: "Alright", artist: "Kendrick Lamar", phase: "flow", genre: "rap", estimatedDurationSeconds: 219 }
+  { title: "Alright", artist: "Kendrick Lamar", phase: "flow", genre: "rap", estimatedDurationSeconds: 219 },
+  { title: "Can't Hold Us", artist: "Macklemore & Ryan Lewis", phase: "flow", genre: "rap", estimatedDurationSeconds: 258 },
+  { title: "Remember The Name", artist: "Fort Minor", phase: "flow", genre: "rap", estimatedDurationSeconds: 230 },
+  { title: "Black and Yellow", artist: "Wiz Khalifa", phase: "flow", genre: "rap", estimatedDurationSeconds: 218 },
+  { title: "Work Out", artist: "J. Cole", phase: "flow", genre: "rap", estimatedDurationSeconds: 234 },
+  { title: "Jump Around", artist: "House Of Pain", phase: "flow", genre: "rap", estimatedDurationSeconds: 217 },
+  { title: "Hypnotize", artist: "The Notorious B.I.G.", phase: "flow", genre: "rap", estimatedDurationSeconds: 230 }
 ];
 
 const pushSongs = [
@@ -58,14 +96,32 @@ const pushSongs = [
   { title: "Don't Start Now", artist: "Dua Lipa", phase: "push", genre: "pop", estimatedDurationSeconds: 183 },
   { title: "Uptown Funk", artist: "Mark Ronson", phase: "push", genre: "pop", estimatedDurationSeconds: 270 },
   { title: "Roar", artist: "Katy Perry", phase: "push", genre: "pop", estimatedDurationSeconds: 223 },
+  { title: "Eye of the Tiger", artist: "Survivor", phase: "push", genre: "pop", estimatedDurationSeconds: 245 },
+  { title: "Born This Way", artist: "Lady Gaga", phase: "push", genre: "pop", estimatedDurationSeconds: 260 },
+  { title: "Physical", artist: "Dua Lipa", phase: "push", genre: "pop", estimatedDurationSeconds: 193 },
+  { title: "Holding Out for a Hero", artist: "Bonnie Tyler", phase: "push", genre: "pop", estimatedDurationSeconds: 341 },
+  { title: "Mr. Brightside", artist: "The Killers", phase: "push", genre: "pop", estimatedDurationSeconds: 223 },
+  { title: "I Love It", artist: "Icona Pop", phase: "push", genre: "pop", estimatedDurationSeconds: 157 },
   { title: "Levels", artist: "Avicii", phase: "push", genre: "edm", estimatedDurationSeconds: 203 },
   { title: "Turn Down for What", artist: "DJ Snake", phase: "push", genre: "edm", estimatedDurationSeconds: 214 },
   { title: "Animals", artist: "Martin Garrix", phase: "push", genre: "edm", estimatedDurationSeconds: 304 },
   { title: "Greyhound", artist: "Swedish House Mafia", phase: "push", genre: "edm", estimatedDurationSeconds: 410 },
+  { title: "Bangarang", artist: "Skrillex", phase: "push", genre: "edm", estimatedDurationSeconds: 215 },
+  { title: "Tremor", artist: "Dimitri Vegas & Like Mike", phase: "push", genre: "edm", estimatedDurationSeconds: 294 },
+  { title: "Bad", artist: "David Guetta", phase: "push", genre: "edm", estimatedDurationSeconds: 170 },
+  { title: "Satisfaction", artist: "Benny Benassi", phase: "push", genre: "edm", estimatedDurationSeconds: 254 },
+  { title: "Scary Monsters and Nice Sprites", artist: "Skrillex", phase: "push", genre: "edm", estimatedDurationSeconds: 244 },
+  { title: "Sandstorm", artist: "Darude", phase: "push", genre: "edm", estimatedDurationSeconds: 225 },
   { title: "Till I Collapse", artist: "Eminem", phase: "push", genre: "rap", estimatedDurationSeconds: 298 },
   { title: "DNA.", artist: "Kendrick Lamar", phase: "push", genre: "rap", estimatedDurationSeconds: 186 },
   { title: "SICKO MODE", artist: "Travis Scott", phase: "push", genre: "rap", estimatedDurationSeconds: 313 },
-  { title: "X Gon' Give It To Ya", artist: "DMX", phase: "push", genre: "rap", estimatedDurationSeconds: 217 }
+  { title: "X Gon' Give It To Ya", artist: "DMX", phase: "push", genre: "rap", estimatedDurationSeconds: 217 },
+  { title: "Jumpman", artist: "Drake", phase: "push", genre: "rap", estimatedDurationSeconds: 205 },
+  { title: "All I Do Is Win", artist: "DJ Khaled", phase: "push", genre: "rap", estimatedDurationSeconds: 232 },
+  { title: "m.A.A.d city", artist: "Kendrick Lamar", phase: "push", genre: "rap", estimatedDurationSeconds: 350 },
+  { title: "Ante Up", artist: "M.O.P.", phase: "push", genre: "rap", estimatedDurationSeconds: 236 },
+  { title: "No Problem", artist: "Chance the Rapper", phase: "push", genre: "rap", estimatedDurationSeconds: 304 },
+  { title: "Started From the Bottom", artist: "Drake", phase: "push", genre: "rap", estimatedDurationSeconds: 173 }
 ];
 
 const cooldownSongs = [
@@ -73,14 +129,32 @@ const cooldownSongs = [
   { title: "Adore You", artist: "Harry Styles", phase: "cooldown", genre: "pop", estimatedDurationSeconds: 207 },
   { title: "Easy On Me", artist: "Adele", phase: "cooldown", genre: "pop", estimatedDurationSeconds: 224 },
   { title: "Heat Waves", artist: "Glass Animals", phase: "cooldown", genre: "pop", estimatedDurationSeconds: 239 },
+  { title: "Sunday Best", artist: "Surfaces", phase: "cooldown", genre: "pop", estimatedDurationSeconds: 159 },
+  { title: "Put Your Records On", artist: "Corinne Bailey Rae", phase: "cooldown", genre: "pop", estimatedDurationSeconds: 215 },
+  { title: "Riptide", artist: "Vance Joy", phase: "cooldown", genre: "pop", estimatedDurationSeconds: 204 },
+  { title: "Better Together", artist: "Jack Johnson", phase: "cooldown", genre: "pop", estimatedDurationSeconds: 207 },
+  { title: "Budapest", artist: "George Ezra", phase: "cooldown", genre: "pop", estimatedDurationSeconds: 200 },
+  { title: "I'm Yours", artist: "Jason Mraz", phase: "cooldown", genre: "pop", estimatedDurationSeconds: 242 },
   { title: "Stole the Show", artist: "Kygo", phase: "cooldown", genre: "edm", estimatedDurationSeconds: 223 },
   { title: "Stay", artist: "Zedd", phase: "cooldown", genre: "edm", estimatedDurationSeconds: 210 },
   { title: "Ocean Drive", artist: "Duke Dumont", phase: "cooldown", genre: "edm", estimatedDurationSeconds: 206 },
   { title: "Latch", artist: "Disclosure", phase: "cooldown", genre: "edm", estimatedDurationSeconds: 255 },
+  { title: "Midnight City", artist: "M83", phase: "cooldown", genre: "edm", estimatedDurationSeconds: 244 },
+  { title: "Sunset Lover", artist: "Petit Biscuit", phase: "cooldown", genre: "edm", estimatedDurationSeconds: 238 },
+  { title: "Faded", artist: "Alan Walker", phase: "cooldown", genre: "edm", estimatedDurationSeconds: 212 },
+  { title: "Are You With Me", artist: "Lost Frequencies", phase: "cooldown", genre: "edm", estimatedDurationSeconds: 138 },
+  { title: "Waves - Robin Schulz Radio Edit", artist: "Mr. Probz", phase: "cooldown", genre: "edm", estimatedDurationSeconds: 208 },
+  { title: "The Ocean", artist: "Mike Perry", phase: "cooldown", genre: "edm", estimatedDurationSeconds: 183 },
   { title: "Juice", artist: "Chance the Rapper", phase: "cooldown", genre: "rap", estimatedDurationSeconds: 218 },
   { title: "Passin' Me By", artist: "The Pharcyde", phase: "cooldown", genre: "rap", estimatedDurationSeconds: 303 },
   { title: "Crew", artist: "GoldLink", phase: "cooldown", genre: "rap", estimatedDurationSeconds: 176 },
-  { title: "Young, Wild & Free", artist: "Snoop Dogg", phase: "cooldown", genre: "rap", estimatedDurationSeconds: 207 }
+  { title: "Young, Wild & Free", artist: "Snoop Dogg", phase: "cooldown", genre: "rap", estimatedDurationSeconds: 207 },
+  { title: "One Love", artist: "Nas", phase: "cooldown", genre: "rap", estimatedDurationSeconds: 325 },
+  { title: "The Light", artist: "Common", phase: "cooldown", genre: "rap", estimatedDurationSeconds: 244 },
+  { title: "Electric Relaxation", artist: "A Tribe Called Quest", phase: "cooldown", genre: "rap", estimatedDurationSeconds: 245 },
+  { title: "Ms. Jackson", artist: "OutKast", phase: "cooldown", genre: "rap", estimatedDurationSeconds: 270 },
+  { title: "LOVE.", artist: "Kendrick Lamar", phase: "cooldown", genre: "rap", estimatedDurationSeconds: 213 },
+  { title: "Best Day Ever", artist: "Mac Miller", phase: "cooldown", genre: "rap", estimatedDurationSeconds: 167 }
 ];
 
 const songsByPhase = {
@@ -100,6 +174,7 @@ const elements = {
   durationInput: document.querySelector("#durationInput"),
   genreSelect: document.querySelector("#genreSelect"),
   refreshDevicesButton: document.querySelector("#refreshDevicesButton"),
+  regenerateButton: document.querySelector("#regenerateButton"),
   deviceSelect: document.querySelector("#deviceSelect"),
   deviceMessage: document.querySelector("#deviceMessage"),
   phaseCards: document.querySelector("#phaseCards"),
@@ -109,7 +184,8 @@ const elements = {
   progressTitle: document.querySelector("#progressTitle"),
   progressText: document.querySelector("#progressText"),
   progressBar: document.querySelector("#progressBar"),
-  toast: document.querySelector("#toast")
+  toast: document.querySelector("#toast"),
+  spotifyOnly: document.querySelectorAll(".spotify-only")
 };
 
 let currentDevices = [];
@@ -122,6 +198,7 @@ async function init() {
   bindEvents();
   renderClientConfiguration();
   updatePlanPreview();
+  renderLoggedOut();
 
   const params = new URLSearchParams(window.location.search);
   const error = params.get("error");
@@ -156,6 +233,7 @@ function bindEvents() {
   elements.logoutButton.addEventListener("click", logout);
   elements.durationInput.addEventListener("input", updatePlanPreview);
   elements.genreSelect.addEventListener("change", updatePlanPreview);
+  elements.regenerateButton.addEventListener("click", regeneratePlan);
   elements.refreshDevicesButton.addEventListener("click", () => runSafely(refreshDevices));
   elements.queueButton.addEventListener("click", () => runSafely(() => loadQueue(false)));
   elements.startButton.addEventListener("click", () => runSafely(() => loadQueue(true)));
@@ -424,11 +502,17 @@ function renderDevices() {
 function renderLoggedIn() {
   elements.authPanel.hidden = true;
   elements.appPanel.hidden = false;
+  elements.spotifyOnly.forEach((element) => {
+    element.hidden = false;
+  });
 }
 
 function renderLoggedOut() {
   elements.authPanel.hidden = false;
-  elements.appPanel.hidden = true;
+  elements.appPanel.hidden = false;
+  elements.spotifyOnly.forEach((element) => {
+    element.hidden = true;
+  });
 }
 
 function logout() {
@@ -445,14 +529,24 @@ function updatePlanPreview() {
   renderPlan(currentPlan);
 }
 
+function regeneratePlan() {
+  updatePlanPreview();
+  showToast("Neue Song-Auswahl generiert.", "success");
+}
+
 function buildPlan() {
   const durationMinutes = getDurationMinutes();
   const genre = elements.genreSelect.value;
+  const usedSongKeys = new Set();
 
   return phaseDefinitions.map((phase) => {
     const targetSeconds = Math.round(durationMinutes * 60 * phase.share);
-    const songs = selectSongsForPhase(phase.key, targetSeconds, genre);
+    const songs = selectSongsForPhase(phase.key, targetSeconds, genre, usedSongKeys);
     const selectedSeconds = sumSeconds(songs);
+
+    songs.forEach((song) => {
+      usedSongKeys.add(getSongKey(song));
+    });
 
     return {
       ...phase,
@@ -471,17 +565,34 @@ function getDurationMinutes() {
   return Math.min(Math.max(rawValue, 10), 120);
 }
 
-function selectSongsForPhase(phaseKey, targetSeconds, selectedGenre) {
-  const pool = songsByPhase[phaseKey];
+function selectSongsForPhase(phaseKey, targetSeconds, selectedGenre, usedSongKeys) {
+  const pool = songsByPhase[phaseKey].filter((song) => !usedSongKeys.has(getSongKey(song)));
   const preferred =
     selectedGenre === "mixed" ? pool : pool.filter((song) => song.genre === selectedGenre);
   const fallback =
     selectedGenre === "mixed" ? [] : pool.filter((song) => song.genre !== selectedGenre);
-  const candidates = [...preferred, ...fallback];
+  return selectRandomSongsForTargetDuration(preferred, fallback, targetSeconds);
+}
+
+function selectRandomSongsForTargetDuration(preferredSongs, fallbackSongs, targetSeconds) {
+  const recentSongKeys = getRecentSongKeys();
+  // Shuffle each priority bucket: selected genre stays first, recent songs are only fallback within that bucket.
+  const candidates = [
+    ...shuffleArray(preferredSongs.filter((song) => !recentSongKeys.has(getSongKey(song)))),
+    ...shuffleArray(preferredSongs.filter((song) => recentSongKeys.has(getSongKey(song)))),
+    ...shuffleArray(fallbackSongs.filter((song) => !recentSongKeys.has(getSongKey(song)))),
+    ...shuffleArray(fallbackSongs.filter((song) => recentSongKeys.has(getSongKey(song))))
+  ];
   const selected = [];
+  const selectedSongKeys = new Set();
   let total = 0;
 
   for (const song of candidates) {
+    const songKey = getSongKey(song);
+    if (selectedSongKeys.has(songKey)) {
+      continue;
+    }
+
     const currentDifference = Math.abs(targetSeconds - total);
     const nextDifference = Math.abs(targetSeconds - (total + song.estimatedDurationSeconds));
 
@@ -490,6 +601,7 @@ function selectSongsForPhase(phaseKey, targetSeconds, selectedGenre) {
     }
 
     selected.push(song);
+    selectedSongKeys.add(songKey);
     total += song.estimatedDurationSeconds;
 
     if (total >= targetSeconds * 0.98) {
@@ -502,6 +614,43 @@ function selectSongsForPhase(phaseKey, targetSeconds, selectedGenre) {
   }
 
   return selected;
+}
+
+function shuffleArray(array) {
+  const shuffled = [...array];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
+function getSongKey(song) {
+  return `${song.title}::${song.artist}`.toLowerCase();
+}
+
+function getRecentSongKeyList() {
+  try {
+    const storedKeys = JSON.parse(localStorage.getItem(RECENT_SONG_STORAGE_KEY));
+    return Array.isArray(storedKeys) ? storedKeys.filter((key) => typeof key === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function getRecentSongKeys() {
+  return new Set(getRecentSongKeyList());
+}
+
+function rememberRecentlyUsedSongs(songs) {
+  try {
+    const nextKeys = [...new Set(songs.map(getSongKey))];
+    const previousKeys = getRecentSongKeyList().filter((key) => !nextKeys.includes(key));
+    const storedKeys = [...nextKeys, ...previousKeys].slice(0, RECENT_SONG_LIMIT);
+    localStorage.setItem(RECENT_SONG_STORAGE_KEY, JSON.stringify(storedKeys));
+  } catch {
+    // localStorage is optional for variety; queueing must still work without it.
+  }
 }
 
 function renderPlan(plan) {
@@ -569,10 +718,12 @@ async function loadQueue(startNow) {
   if (startNow) {
     await startFirstTrack(deviceId, resolvedTracks[0]);
     await queueTracks(deviceId, resolvedTracks.slice(1));
+    rememberRecentlyUsedSongs(resolvedTracks);
     setProgress(resolvedTracks.length, resolvedTracks.length, "Jogging-Musik wurde gestartet und die restlichen Songs wurden in die Warteschlange geladen.");
     showToast("Jogging-Musik wurde gestartet und die restlichen Songs wurden in die Warteschlange geladen.", "success");
   } else {
     await queueTracks(deviceId, resolvedTracks);
+    rememberRecentlyUsedSongs(resolvedTracks);
     setProgress(resolvedTracks.length, resolvedTracks.length, "Songs wurden in deine Spotify-Warteschlange geladen.");
     showToast("Songs wurden in deine Spotify-Warteschlange geladen.", "success");
   }
@@ -658,6 +809,7 @@ function setBusy(nextBusy) {
   isBusy = nextBusy;
   [
     elements.refreshDevicesButton,
+    elements.regenerateButton,
     elements.queueButton,
     elements.startButton,
     elements.durationInput,

@@ -302,6 +302,14 @@ h3 {
   font-size: 0.9rem;
 }
 
+.plan-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
 .phase-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -429,5 +437,15 @@ h3 {
 
   .button {
     width: 100%;
+  }
+
+  .plan-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .plan-actions .summary-pill {
+    width: 100%;
+    text-align: center;
   }
 }
