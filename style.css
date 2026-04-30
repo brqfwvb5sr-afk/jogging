@@ -219,6 +219,22 @@ h3 {
   box-shadow: 0 0 0 3px rgba(30, 215, 96, 0.16);
 }
 
+.checkbox-field {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  min-height: 48px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0a100c;
+  padding: 0 14px;
+}
+
+.checkbox-field input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--spotify);
+}
+
 .device-tools {
   align-items: end;
 }

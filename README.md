@@ -18,6 +18,8 @@ https://brqfwvb5sr-afk.github.io/jogging/
 - Songauswahl nach Dauer, Phase und Genre
 - Zufällige Songauswahl innerhalb jeder Phase
 - Button **Neue Auswahl generieren** zum lokalen Neu-Würfeln der Vorschau
+- Spotify-Geschmack als Inspiration über Top Tracks, gespeicherte Songs und zuletzt gehörte Songs
+- Jogging-Fitness-Filter gegen langsame, traurige oder sehr chillige Songs
 - Spotify Search API zum Auflösen der Track-URIs
 - Queue-Modus: alle Tracks nacheinander in die Warteschlange laden
 - Start-Modus: ersten Track starten, restliche Tracks nacheinander laden
@@ -66,9 +68,16 @@ user-read-private
 user-read-playback-state
 user-modify-playback-state
 user-read-currently-playing
+user-top-read
+user-library-read
+user-read-recently-played
 ```
 
-`user-read-currently-playing` ist optional, aber bereits eingetragen.
+`user-read-currently-playing` ist optional, aber bereits eingetragen. Die
+zusätzlichen Taste-Scopes werden für Top Tracks, gespeicherte Songs und zuletzt
+gehörte Songs genutzt. Wenn du schon vor dieser Erweiterung angemeldet warst,
+trenne die Verbindung einmal und melde dich neu an, damit Spotify diese
+Berechtigungen bestätigt.
 
 ## 4. GitHub Pages aktivieren
 
@@ -96,7 +105,8 @@ https://brqfwvb5sr-afk.github.io/jogging/
 7. Waehle Dauer und Musikstil.
 8. Pruefe die Song-Vorschau.
 9. Klicke optional auf **Neue Auswahl generieren**, um eine andere lokale Auswahl zu würfeln.
-10. Nutze **In Warteschlange laden** oder **Jetzt starten**.
+10. Lasse **Langsame/traurige Songs beim Joggen vermeiden** aktiviert, wenn persönliche ruhige Lieblingssongs nicht in die Lauf-Queue sollen.
+11. Nutze **In Warteschlange laden** oder **Jetzt starten**.
 
 Wenn kein Gerät gefunden wird, öffne Spotify auf deinem Handy oder PC und
 starte kurz einen Song. Danach klicke erneut auf **Geräte aktualisieren**.
@@ -111,6 +121,13 @@ starte kurz einen Song. Danach klicke erneut auf **Geräte aktualisieren**.
   damit Spotify nicht mit parallelen Requests belastet wird.
 - Spotify kann einzelne Songs trotz bekannter Titel gelegentlich nicht finden.
   Solche Songs werden übersprungen.
+- Spotify-Geschmack wird nur als Inspiration verwendet. Persönliche Songs mit
+  stark langsamen, traurigen, akustischen oder chilligen Hinweisen werden
+  standardmäßig abgewertet oder übersprungen.
+- Die App kann nicht perfekt erkennen, ob ein Song traurig oder langsam ist. Sie
+  nutzt einfache Regeln über Titel, Artist-Genres und Quelle.
+- Die Option **Langsame/traurige Songs beim Joggen vermeiden** kann deaktiviert
+  werden, wenn du bewusst mehr ruhige persönliche Songs zulassen möchtest.
 
 ## 7. Technischer Aufbau
 

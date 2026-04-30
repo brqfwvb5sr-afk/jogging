@@ -71,7 +71,19 @@
               <option value="mixed">Mixed</option>
             </select>
           </label>
+
+          <label class="field checkbox-field spotify-only">
+            <input id="useSpotifyTasteCheckbox" type="checkbox" checked>
+            <span>Spotify-Geschmack verwenden</span>
+          </label>
+
+          <label class="field checkbox-field">
+            <input id="avoidSlowSongsCheckbox" type="checkbox" checked>
+            <span>Langsame/traurige Songs beim Joggen vermeiden</span>
+          </label>
         </div>
+
+        <div id="tasteMessage" class="message" role="status"></div>
 
         <div class="device-tools spotify-only">
           <button id="refreshDevicesButton" class="button button-secondary" type="button">
