@@ -1,0 +1,433 @@
+:root {
+  color-scheme: dark;
+  --bg: #080c0a;
+  --panel: #111712;
+  --panel-strong: #172019;
+  --muted: #98a79b;
+  --text: #eef7f0;
+  --soft-text: #c7d4ca;
+  --line: rgba(255, 255, 255, 0.1);
+  --spotify: #1ed760;
+  --spotify-dark: #0fa84a;
+  --warning: #f8c35b;
+  --error: #ff7777;
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.36);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top left, rgba(30, 215, 96, 0.16), transparent 34rem),
+    linear-gradient(180deg, #0d130f 0%, var(--bg) 50%, #050705 100%);
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  color: var(--text);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  line-height: 1.5;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled,
+select:disabled,
+input:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.app-shell {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 40px 0;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 22px;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 74px;
+  height: 74px;
+  border-radius: 20px;
+  background: var(--spotify);
+  color: #041107;
+  font-weight: 900;
+  letter-spacing: 0;
+  box-shadow: 0 18px 42px rgba(30, 215, 96, 0.28);
+}
+
+.hero-copy {
+  max-width: 760px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--spotify);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 10px;
+  font-size: clamp(2.2rem, 6vw, 5rem);
+  line-height: 0.95;
+  letter-spacing: 0;
+}
+
+h2 {
+  margin-bottom: 8px;
+  font-size: 1.35rem;
+}
+
+h3 {
+  margin-bottom: 8px;
+  font-size: 1.05rem;
+}
+
+.hero p,
+.panel p,
+.notice {
+  color: var(--soft-text);
+}
+
+.notice,
+.panel,
+.activity-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(17, 23, 18, 0.9);
+  box-shadow: var(--shadow);
+}
+
+.notice {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+}
+
+.notice strong {
+  color: var(--text);
+}
+
+.panel {
+  padding: 22px;
+}
+
+.auth-panel {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.app-panel {
+  display: grid;
+  gap: 22px;
+}
+
+.connection-row,
+.device-tools,
+.action-row,
+.section-heading,
+.progress-copy {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.connection-state {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.connection-state span:last-child,
+.progress-copy span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.93rem;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--spotify);
+  box-shadow: 0 0 0 6px rgba(30, 215, 96, 0.15);
+}
+
+.controls-grid {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr);
+  gap: 16px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  color: var(--soft-text);
+  font-weight: 700;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0a100c;
+  color: var(--text);
+  padding: 0 14px;
+  outline: none;
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: rgba(30, 215, 96, 0.72);
+  box-shadow: 0 0 0 3px rgba(30, 215, 96, 0.16);
+}
+
+.device-tools {
+  align-items: end;
+}
+
+.device-field {
+  flex: 1;
+}
+
+.button {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0 18px;
+  color: var(--text);
+  font-weight: 800;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.button-primary {
+  background: var(--spotify);
+  color: #061107;
+}
+
+.button-primary:hover:not(:disabled) {
+  background: #35e274;
+}
+
+.button-secondary {
+  background: var(--panel-strong);
+  border-color: rgba(30, 215, 96, 0.35);
+}
+
+.button-secondary:hover:not(:disabled) {
+  border-color: var(--spotify);
+}
+
+.button-ghost {
+  background: transparent;
+  border-color: var(--line);
+}
+
+.message,
+.hint {
+  margin: 0;
+  color: var(--muted);
+}
+
+.warning {
+  color: var(--warning);
+}
+
+.error {
+  color: var(--error);
+}
+
+.success {
+  color: var(--spotify);
+}
+
+.plan-section {
+  display: grid;
+  gap: 14px;
+}
+
+.summary-pill {
+  flex: none;
+  border: 1px solid rgba(30, 215, 96, 0.32);
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: var(--soft-text);
+  font-size: 0.9rem;
+}
+
+.phase-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.phase-card {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0b110d;
+  padding: 16px;
+}
+
+.phase-meta {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.song-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.song-list li {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 10px;
+}
+
+.song-title {
+  overflow-wrap: anywhere;
+  font-weight: 800;
+}
+
+.song-details {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.activity-panel {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  background: var(--panel-strong);
+  box-shadow: none;
+}
+
+.progress-track {
+  overflow: hidden;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.progress-bar {
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--spotify);
+  transition: width 220ms ease;
+}
+
+.toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 10;
+  width: min(420px, calc(100% - 40px));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #101712;
+  color: var(--text);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+}
+
+@media (max-width: 920px) {
+  .phase-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  h1 {
+    font-size: clamp(2.25rem, 10vw, 4.2rem);
+  }
+}
+
+@media (max-width: 680px) {
+  .app-shell {
+    width: min(100% - 24px, 1120px);
+    padding: 24px 0;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .brand-mark {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+  }
+
+  .auth-panel,
+  .connection-row,
+  .device-tools,
+  .action-row,
+  .section-heading,
+  .progress-copy {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .controls-grid,
+  .phase-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .button {
+    width: 100%;
+  }
+}
